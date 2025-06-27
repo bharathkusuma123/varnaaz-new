@@ -1,24 +1,30 @@
-import logo from './logo.svg';
 import './App.css';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Login from './components/loginSignup/login'; 
+import Signup from './components/loginSignup/signup';
+import AdminDashboard from './components/panels/admin/AdminDashboard';
+import ManagerDashboard from './components/panels/manager/ManagerDashboard';
+import EmployeeDashboard from './components/panels/employee/EmployeeDashboard';
+import SuperadminDashboard from './components/panels/superadmin/SuperadminDashboard';
 
 function App() {
+  const queryClient = new QueryClient();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/admindashboard" element={<AdminDashboard />} />
+          <Route path="/managerdashboard" element={<ManagerDashboard />} />
+          <Route path="/employedashboard" element={<EmployeeDashboard />} />
+          <Route path="/superadmindashboard" element={<SuperadminDashboard />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
