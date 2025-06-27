@@ -7,7 +7,10 @@ import Signup from './components/loginSignup/signup';
 import AdminDashboard from './components/panels/admin/AdminDashboard';
 import ManagerDashboard from './components/panels/manager/ManagerDashboard';
 import EmployeeDashboard from './components/panels/employee/EmployeeDashboard';
-import SuperadminDashboard from './components/panels/superadmin/SuperadminDashboard';
+import SuperadminDashboard from './components/panels/superadmin/SuperadminDashboard'; 
+import AdminRegistrationForm from './components/panels/superadmin/AdminRegistrationForm';
+import ManagerRgistration from './components/panels/admin/ManagerRgistration';
+import EmployeeRegistration from './components/panels/manager/EmployeeRegistration';
 
 function App() {
   const queryClient = new QueryClient();
@@ -22,6 +25,9 @@ function App() {
           <Route path="/managerdashboard" element={<ManagerDashboard />} />
           <Route path="/employedashboard" element={<EmployeeDashboard />} />
           <Route path="/superadmindashboard" element={<SuperadminDashboard />} />
+           <Route path="/adminregistrationform" element={<AdminRegistrationForm />} />
+           <Route path="/managerrgistration" element={<ManagerRgistration />} />
+           <Route path="/employeeregistration" element={<EmployeeRegistration />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

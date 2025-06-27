@@ -1,0 +1,143 @@
+.login-container {
+  min-height: 100vh;
+  width: 100vw;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.login-card {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-title {
+  font-weight: 600;
+  color: #20555c;
+}
+
+.login-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.login-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px !important;
+  display: block;
+}
+
+.login-input {
+  border-radius: 10px;
+  height: 50px;
+  font-size: 1rem;
+  border: 2px solid #ddd;
+  transition: all 0.3s ease-in-out;
+  box-shadow: none !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  padding: 10px 15px;
+}
+
+.login-input:focus {
+  border-color: #6c757d;
+  box-shadow: none;
+}
+
+.login-eye-icon {
+  top: 70%;
+  right: 15px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 1.2rem;
+}
+
+.login-submit-btn {
+  background: #0180ff;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: 0.3s;
+  border: none !important;
+  width: 48%;
+}
+
+.login-submit-btn:hover {
+  background: #5c91c5;
+}
+
+.login-cancel-btn {
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: 0.3s;
+  width: 48%;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.navbar-logo i {
+  font-size: 1.6rem;
+}
+
+.navbar-brand {
+  font-size: 1.4rem;
+}
+
+.login-input::placeholder {
+  color: #c9c9c9 !important;
+  font-size: 0.9rem !important;
+}
+
+@media (max-width: 1024px) {
+  .login-card {
+    padding: 20px;
+  }
+
+  .login-input {
+    height: 45px;
+    font-size: 0.9rem;
+  }
+
+  .login-submit-btn,
+  .login-cancel-btn {
+    padding: 10px 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    padding: 15px;
+    margin: 15px;
+  }
+
+  .login-input {
+    height: 45px;
+    font-size: 0.9rem;
+  }
+
+  .login-submit-btn,
+  .login-cancel-btn {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .d-flex {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
