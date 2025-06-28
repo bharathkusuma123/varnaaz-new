@@ -64,13 +64,13 @@ import { getFirestore, serverTimestamp } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAO2WLo9kQcT8BX-Kg0ste53uVdis5DU0M",
-  authDomain: "tickettracker-dedc6.firebaseapp.com",
-  databaseURL: "https://tickettracker-dedc6-default-rtdb.firebaseio.com",
-  projectId: "tickettracker-dedc6",
-  storageBucket: "tickettracker-dedc6.appspot.com",
-  messagingSenderId: "1075768501163",
-  appId: "1:1075768501163:web:a05d81a9e1792c6bf128ee"
+  apiKey: "AIzaSyCDa_2s67IEGFmwgjHdUKLi9PoW-mbB6Hg",
+  authDomain: "bkarts-11.firebaseapp.com",
+  projectId: "bkarts-11",
+  databaseURL: "https://bkarts-11-default-rtdb.firebaseio.com",
+  storageBucket: "bkarts-11.appspot.com",
+  messagingSenderId: "616704223125",
+  appId: "1:616704223125:web:5d0e8e1dd0da1f9948389c"
 };
 
 const app = initializeApp(firebaseConfig);

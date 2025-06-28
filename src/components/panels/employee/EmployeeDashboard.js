@@ -3,7 +3,7 @@ import React from 'react'
 function EmployeeDashboard() {
   return (
     <div>
-      employee
+     <h1 className="text-center mb-4">Employee Dashboard</h1>
     </div>
   )
 }

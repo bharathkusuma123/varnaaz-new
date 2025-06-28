@@ -9,8 +9,11 @@ import ManagerDashboard from './components/panels/manager/ManagerDashboard';
 import EmployeeDashboard from './components/panels/employee/EmployeeDashboard';
 import SuperadminDashboard from './components/panels/superadmin/SuperadminDashboard'; 
 import AdminRegistrationForm from './components/panels/superadmin/AdminRegistrationForm';
-import ManagerRgistration from './components/panels/admin/ManagerRgistration';
+import ManagerRgistration from './components/panels/admin/ManagerRegistration';
 import EmployeeRegistration from './components/panels/manager/EmployeeRegistration';
+import ViewEmployees from './components/panels/manager/ViewEmployees';
+import ViewManagers from './components/panels/admin/ViewManagers';
+import ViewAdminDetails from './components/panels/superadmin/ViewAdminDetails';
 
 function App() {
   const queryClient = new QueryClient();
@@ -26,8 +29,11 @@ function App() {
           <Route path="/employedashboard" element={<EmployeeDashboard />} />
           <Route path="/superadmindashboard" element={<SuperadminDashboard />} />
            <Route path="/adminregistrationform" element={<AdminRegistrationForm />} />
-           <Route path="/managerrgistration" element={<ManagerRgistration />} />
+           <Route path="/managerregistration" element={<ManagerRgistration />} />
            <Route path="/employeeregistration" element={<EmployeeRegistration />} />
+           <Route path="/viewemployees" element={<ViewEmployees />} />
+            <Route path="/viewmanagers" element={<ViewManagers />} />
+             <Route path="/viewadmindetails" element={<ViewAdminDetails />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
