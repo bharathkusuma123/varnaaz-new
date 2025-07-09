@@ -26,6 +26,9 @@ const Login = () => {
       const user = userCredential.user;
       console.log("User logged in with UID:", user.uid); // Log UID to console
 
+      // Store UID in localStorage
+      localStorage.setItem('currentUserUid', user.uid);
+
       // Step 2: Get user data from Firestore using UID
       const userDocRef = doc(db, "users", user.uid);
       const userSnapshot = await getDoc(userDocRef);
