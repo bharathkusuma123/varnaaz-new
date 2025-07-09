@@ -31,6 +31,13 @@ import EmployeeAttendance from './components/panels/employee/Attendance/Attendan
 import EmployeeDailyAttendance from './components/panels/employee/Attendance/DailyAttendance';
 import EmployeeMonthlyAttendance from './components/panels/employee/Attendance/MonthlyAttendance';
 import EmployeeLeavesPage from './components/panels/employee/Leaves/Leaves';
+import AdminManagerAttendance from './components/panels/admin/Attendance/ManagerAttendance';
+import AdminManagerMonthlyAttendance from './components/panels/admin/Attendance/ManagerMonthlyAttendance';
+import AdminManagerLeavesPage from './components/panels/admin/Leaves/ManagersLeaves';
+import EmployeeLeaves from './components/panels/manager/Leaves/EmployeeLeaves';
+import ManagerEmployeeLeaves from './components/panels/manager/Leaves/EmployeeLeaves';
+import ManagerEmployeeMonthlyAttendance from './components/panels/manager/Attendance/EmployeeMonthlyAttendance';
+import ManagerEmployeeDailyAttendance from './components/panels/manager/Attendance/EmployeeDailyAttendance';
 
 function App() {
   const queryClient = new QueryClient();
@@ -76,6 +83,14 @@ function App() {
           <Route path="/e-monthlyattendance" element={<EmployeeMonthlyAttendance />} />
           <Route path="/e-leaves" element={<EmployeeLeavesPage />} />
 
+          <Route path="/a-m-attendance" element={<AdminManagerAttendance />} />
+          <Route path="/a-m-monthlyattendance" element={<AdminManagerMonthlyAttendance />} />
+          <Route path="/a-m-leave" element={<AdminManagerLeavesPage />} />
+
+           <Route path="/m-e-dailyattendance" element={<ManagerEmployeeDailyAttendance />} />
+          <Route path="/m-e-monthlyattendance" element={<ManagerEmployeeMonthlyAttendance/>} />
+          <Route path="/m-e-leave" element={<ManagerEmployeeLeaves />} />
+          
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

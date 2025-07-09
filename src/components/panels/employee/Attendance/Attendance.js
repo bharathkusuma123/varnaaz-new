@@ -6,10 +6,14 @@ import './Attendance.css';
 import EmployeeNavbar from '../../../Navbar/EmployeeNavbar/Navbar';
 
 const EmployeeAttendance = () => {
-    const user = {
-        name: "John Doe",
-        uid: "12345"
-    };
+    // Get user data from localStorage
+    const currentUserUid = localStorage.getItem('currentUserUid');
+    const supervisorUid = localStorage.getItem('manager_uid') || null;
+    
+    const [user, setUser] = useState({
+        name: "Loading...",
+        uid: currentUserUid
+    });
 
     const [attendance, setAttendance] = useState({
         checkInTime: null,
@@ -17,6 +21,29 @@ const EmployeeAttendance = () => {
         duration: null,
         status: "N/A"
     });
+
+    // Fetch user details on component mount
+    useEffect(() => {
+        const fetchUserDetails = async () => {
+            try {
+                const userDocRef = doc(db, 'users', currentUserUid);
+                const userDocSnap = await getDoc(userDocRef);
+                
+                if (userDocSnap.exists()) {
+                    setUser({
+                        name: userDocSnap.data().fullName || "Unknown User",
+                        uid: currentUserUid
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching user details:", error);
+            }
+        };
+
+        if (currentUserUid) {
+            fetchUserDetails();
+        }
+    }, [currentUserUid]);
 
     const getCurrentDate = () => {
         const today = new Date();
@@ -48,7 +75,9 @@ const EmployeeAttendance = () => {
             }
         };
 
-        loadAttendanceData();
+        if (user.uid) {
+            loadAttendanceData();
+        }
     }, [today, user.uid]);
 
     const calculateDuration = (checkInTime, checkOutTime) => {
@@ -66,13 +95,15 @@ const EmployeeAttendance = () => {
         try {
             const docRef = doc(db, 'e_attendance', user.uid);
             
-          await setDoc(docRef, {
-    name: user.name, // 👈 Add this line
-    [today]: {
-        checkIn: now,
-        status: "Checked In"
-    }
-}, { merge: true });
+            await setDoc(docRef, {
+                name: user.name,
+                supervisorUid: supervisorUid, // Storing supervisor UID at document level
+                [today]: {
+                    checkIn: now,
+                    status: "Checked In",
+                    supervisorUid: supervisorUid // Also storing in daily record
+                }
+            }, { merge: true });
 
             setAttendance({
                 ...attendance,
@@ -101,15 +132,17 @@ const EmployeeAttendance = () => {
             const checkInTimestamp = docSnap.data()[today].checkIn.toDate();
             const duration = calculateDuration(checkInTimestamp, now);
 
-          const updateData = {
-    name: user.name, // 👈 Add this line
-    [today]: {
-        ...docSnap.data()[today],
-        checkOut: now,
-        duration: duration,
-        status: "Present"
-    }
-};
+            const updateData = {
+                name: user.name,
+                supervisorUid: supervisorUid, // Maintaining supervisor UID
+                [today]: {
+                    ...docSnap.data()[today],
+                    checkOut: now,
+                    duration: duration,
+                    status: "Present",
+                    supervisorUid: supervisorUid // Also in daily record
+                }
+            };
 
             await setDoc(docRef, updateData, { merge: true });
 
@@ -127,70 +160,70 @@ const EmployeeAttendance = () => {
 
     return (
         <>
-        <EmployeeNavbar/>
-        <div className="attendance-container">
-            <div className="attendance-header">
-                <h2>Attendance</h2>
-                <p className="welcome-message">Welcome, {user.name}</p>
+            <EmployeeNavbar/>
+            <div className="attendance-container">
+                <div className="attendance-header">
+                    <h2>Attendance</h2>
+                    <p className="welcome-message">Welcome, {user.name}</p>
+                </div>
+
+                <div className="attendance-card">
+                    <div className="attendance-date">
+                        <span className="date-label">Date:</span>
+                        <span className="date-value">{today}</span>
+                    </div>
+
+                    <div className="attendance-details">
+                        <div className="detail-row">
+                            <span className="detail-label">Check-In:</span>
+                            <span className="detail-value">
+                                {attendance.checkInTime || "Not checked in"}
+                            </span>
+                        </div>
+
+                        <div className="detail-row">
+                            <span className="detail-label">Check-Out:</span>
+                            <span className="detail-value">
+                                {attendance.checkOutTime || "Not checked out"}
+                            </span>
+                        </div>
+
+                        <div className="detail-row">
+                            <span className="detail-label">Duration:</span>
+                            <span className="detail-value">
+                                {attendance.duration || "N/A"}
+                            </span>
+                        </div>
+
+                        <div className="detail-row">
+                            <span className="detail-label">Status:</span>
+                            <span className={`detail-value status-${attendance.status.toLowerCase().replace(' ', '-')}`}>
+                                {attendance.status}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="attendance-actions">
+                        {!attendance.checkInTime && (
+                            <button 
+                                onClick={handleCheckIn}
+                                className="btn checkin-btn"
+                            >
+                                Check In
+                            </button>
+                        )}
+
+                        {attendance.checkInTime && !attendance.checkOutTime && (
+                            <button 
+                                onClick={handleCheckOut}
+                                className="btn checkout-btn"
+                            >
+                                Check Out
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
-
-            <div className="attendance-card">
-                <div className="attendance-date">
-                    <span className="date-label">Date:</span>
-                    <span className="date-value">{today}</span>
-                </div>
-
-                <div className="attendance-details">
-                    <div className="detail-row">
-                        <span className="detail-label">Check-In:</span>
-                        <span className="detail-value">
-                            {attendance.checkInTime || "Not checked in"}
-                        </span>
-                    </div>
-
-                    <div className="detail-row">
-                        <span className="detail-label">Check-Out:</span>
-                        <span className="detail-value">
-                            {attendance.checkOutTime || "Not checked out"}
-                        </span>
-                    </div>
-
-                    <div className="detail-row">
-                        <span className="detail-label">Duration:</span>
-                        <span className="detail-value">
-                            {attendance.duration || "N/A"}
-                        </span>
-                    </div>
-
-                    <div className="detail-row">
-                        <span className="detail-label">Status:</span>
-                        <span className={`detail-value status-${attendance.status.toLowerCase().replace(' ', '-')}`}>
-                            {attendance.status}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="attendance-actions">
-                    {!attendance.checkInTime && (
-                        <button 
-                            onClick={handleCheckIn}
-                            className="btn checkin-btn"
-                        >
-                            Check In
-                        </button>
-                    )}
-
-                    {attendance.checkInTime && !attendance.checkOutTime && (
-                        <button 
-                            onClick={handleCheckOut}
-                            className="btn checkout-btn"
-                        >
-                            Check Out
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
         </>
     );
 };

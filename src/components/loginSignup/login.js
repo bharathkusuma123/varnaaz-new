@@ -17,72 +17,95 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      // Step 1: Sign in using Firebase Authentication
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log("User logged in with UID:", user.uid); // Log UID to console
+  try {
+    // Step 1: Sign in using Firebase Authentication
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    console.log("User logged in with UID:", user.uid); // Log UID to console
+
+    // Step 2: Get user data from Firestore using UID
+    const userDocRef = doc(db, "users", user.uid);
+    const userSnapshot = await getDoc(userDocRef);
+
+    if (userSnapshot.exists()) {
+      const userData = userSnapshot.data();
+      const userRole = (userData.role || "").toLowerCase(); // Case-insensitive
 
       // Store UID in localStorage
       localStorage.setItem('currentUserUid', user.uid);
+      console.log("Stored currentUserUid:", user.uid);
 
-      // Step 2: Get user data from Firestore using UID
-      const userDocRef = doc(db, "users", user.uid);
-      const userSnapshot = await getDoc(userDocRef);
-
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.data();
-        const userRole = (userData.role || "").toLowerCase(); // Case-insensitive
-
-        Swal.fire({
-          title: "Success!",
-          text: "Login successful!",
-          icon: "success",
-          confirmButtonText: "OK",
-        }).then(() => {
-          // Pass UID as state when navigating
-          switch (userRole) {
-            case "superadmin":
-              navigate("/superadmindashboard", { state: { uid: user.uid } });
-              console.log("Navigating to superadmin dashboard with UID:", user.uid);
-              break;
-            case "admin":
-              navigate("/admindashboard", { state: { uid: user.uid } });
-              console.log("Navigating to admin dashboard with UID:", user.uid);
-              break;
-            case "manager":
-              navigate("/managerdashboard", { state: { uid: user.uid } });
-              console.log("Navigating to manager dashboard with UID:", user.uid);
-              break;
-            case "employee":
-              navigate("/employedashboard", { state: { uid: user.uid } });
-              console.log("Navigating to employee dashboard with UID:", user.uid);
-              break;
-            default:
-              Swal.fire({
-                title: "Access Denied",
-                text: "You are not authorized to access this portal",
-                icon: "error",
-                confirmButtonText: "OK",
-              });
-          }
-        });
+      // Store manager/supervisor UID based on role
+      if (userRole === "admin" && userData.superadmin_uid) {
+        localStorage.setItem('superadmin_uid', userData.superadmin_uid);
+        console.log("Admin user - stored superadmin_uid:", userData.superadmin_uid);
+      } else if (userRole === "manager" && userData.admin_uid) {
+        localStorage.setItem('admin_uid', userData.admin_uid);
+        console.log("Manager user - stored admin_uid:", userData.admin_uid);
+      } else if (userRole === "employee" && userData.manager_uid) {
+        localStorage.setItem('manager_uid', userData.manager_uid);
+        console.log("Employee user - stored manager_uid:", userData.manager_uid);
       } else {
-        throw new Error("User data not found in Firestore.");
+        console.log("No supervisor UID to store for this role:", userRole);
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      Swal.fire({
-        title: "Login Failed",
-        text: error.message,
-        icon: "error",
-        confirmButtonText: "OK",
+
+      // Debug: Log all stored UIDs
+      console.log("All stored UIDs after login:", {
+        currentUserUid: localStorage.getItem('currentUserUid'),
+        superadmin_uid: localStorage.getItem('superadmin_uid'),
+        admin_uid: localStorage.getItem('admin_uid'),
+        manager_uid: localStorage.getItem('manager_uid')
       });
+
+      Swal.fire({
+        title: "Success!",
+        text: "Login successful!",
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(() => {
+        // Pass UID as state when navigating
+        switch (userRole) {
+          case "superadmin":
+            navigate("/superadmindashboard", { state: { uid: user.uid } });
+            console.log("Navigating to superadmin dashboard with UID:", user.uid);
+            break;
+          case "admin":
+            navigate("/admindashboard", { state: { uid: user.uid } });
+            console.log("Navigating to admin dashboard with UID:", user.uid);
+            break;
+          case "manager":
+            navigate("/managerdashboard", { state: { uid: user.uid } });
+            console.log("Navigating to manager dashboard with UID:", user.uid);
+            break;
+          case "employee":
+            navigate("/employedashboard", { state: { uid: user.uid } });
+            console.log("Navigating to employee dashboard with UID:", user.uid);
+            break;
+          default:
+            Swal.fire({
+              title: "Access Denied",
+              text: "You are not authorized to access this portal",
+              icon: "error",
+              confirmButtonText: "OK",
+            });
+        }
+      });
+    } else {
+      throw new Error("User data not found in Firestore.");
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    Swal.fire({
+      title: "Login Failed",
+      text: error.message,
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  }
+};
 
   return (
     <div className="login-container">
