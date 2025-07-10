@@ -38,6 +38,9 @@ import EmployeeLeaves from './components/panels/manager/Leaves/EmployeeLeaves';
 import ManagerEmployeeLeaves from './components/panels/manager/Leaves/EmployeeLeaves';
 import ManagerEmployeeMonthlyAttendance from './components/panels/manager/Attendance/EmployeeMonthlyAttendance';
 import ManagerEmployeeDailyAttendance from './components/panels/manager/Attendance/EmployeeDailyAttendance';
+import Super_AdminDailyattendance from './components/panels/superadmin/Attendance/Super_AdminDailyattendance';
+import Super_adminMonthlyAttendance from './components/panels/superadmin/Attendance/Super_adminMonthlyAttendance';
+import AdminLevaes from './components/panels/superadmin/Leaves/AdminLevaes';
 
 function App() {
   const queryClient = new QueryClient();
@@ -90,6 +93,10 @@ function App() {
            <Route path="/m-e-dailyattendance" element={<ManagerEmployeeDailyAttendance />} />
           <Route path="/m-e-monthlyattendance" element={<ManagerEmployeeMonthlyAttendance/>} />
           <Route path="/m-e-leave" element={<ManagerEmployeeLeaves />} />
+
+                     <Route path="/sa-a-attendance" element={<Super_AdminDailyattendance />} />
+          <Route path="/sa-a-monthlyattendance" element={<Super_adminMonthlyAttendance/>} />
+          <Route path="/sa-a-leave" element={<AdminLevaes />} />
           
         </Routes>
       </BrowserRouter>
