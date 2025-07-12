@@ -191,7 +191,7 @@ const LeavesPage = () => {
                         {leave.status}
                       </td>
                       <td>{new Date(leave.appliedOn).toLocaleDateString('en-IN')}</td>
-                      <td>{leave.supervisorUid || 'N/A'}</td>
+                      {/* <td>{leave.supervisorUid || 'N/A'}</td> */}
                     </tr>
                   ))}
                 </tbody>

@@ -15,10 +15,22 @@ const EmployeeMonthlyAttendance = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [attendanceData, setAttendanceData] = useState([]);
+  const [daysInMonth, setDaysInMonth] = useState([]);
 
-  const daysInMonth = Array.from({ length: 31 }, (_, i) =>
-    String(i + 1).padStart(2, "0")
-  );
+  // Function to get days in month (handles leap years)
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  // Update daysInMonth when selectedMonth changes
+  useEffect(() => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const daysCount = getDaysInMonth(year, month);
+    const daysArray = Array.from({ length: daysCount }, (_, i) =>
+      String(i + 1).padStart(2, "0")
+    );
+    setDaysInMonth(daysArray);
+  }, [selectedMonth]);
 
   const getMonthName = (monthStr) => {
     const [year, month] = monthStr.split("-");
@@ -84,57 +96,57 @@ const EmployeeMonthlyAttendance = () => {
 
   return (
     <>
-    <EmployeeNavbar/>
-    <div className="monthly-attendance-container">
-      <h2 className="title">
-        Monthly Attendance for {getMonthName(selectedMonth)}{" "}
-        {selectedMonth.split("-")[0]}
-      </h2>
+      <EmployeeNavbar/>
+      <div className="monthly-attendance-container">
+        <h2 className="title">
+          Monthly Attendance for {getMonthName(selectedMonth)}{" "}
+          {selectedMonth.split("-")[0]}
+        </h2>
 
-      <div className="filters">
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-        />
-        <button className="download-btn" onClick={downloadExcel}>
-          Download Excel
-        </button>
+        <div className="filters">
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          />
+          <button className="download-btn" onClick={downloadExcel}>
+            Download Excel
+          </button>
+        </div>
+
+        <div className="table-responsive">
+          <table className="attendance-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>User Name</th>
+                {daysInMonth.map((d) => (
+                  <th key={d}>{d}</th>
+                ))}
+                <th>Total Present</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attendanceData.map((user, idx) => {
+                const totalPresent = daysInMonth.filter(
+                  (d) => user.attendance[d] === "P"
+                ).length;
+
+                return (
+                  <tr key={user.uid}>
+                    <td>{idx + 1}</td>
+                    <td>{user.name}</td>
+                    {daysInMonth.map((d) => (
+                      <td key={d}>{user.attendance[d] || ""}</td>
+                    ))}
+                    <td>{totalPresent}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <div className="table-responsive">
-        <table className="attendance-table">
-          <thead>
-            <tr>
-              <th>S.No</th>
-              <th>User Name</th>
-              {daysInMonth.map((d) => (
-                <th key={d}>{d}</th>
-              ))}
-              <th>Total Present</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attendanceData.map((user, idx) => {
-              const totalPresent = daysInMonth.filter(
-                (d) => user.attendance[d] === "P"
-              ).length;
-
-              return (
-                <tr key={user.uid}>
-                  <td>{idx + 1}</td>
-                  <td>{user.name}</td>
-                  {daysInMonth.map((d) => (
-                    <td key={d}>{user.attendance[d] || ""}</td>
-                  ))}
-                  <td>{totalPresent}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
     </>
   );
 };

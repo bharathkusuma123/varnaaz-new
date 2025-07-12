@@ -15,47 +15,70 @@ const ManagerMonthlyAttendance = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [attendanceData, setAttendanceData] = useState([]);
+  const [daysInMonth, setDaysInMonth] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const daysInMonth = Array.from({ length: 31 }, (_, i) =>
-    String(i + 1).padStart(2, "0")
-  );
+  // Function to get days in month (handles leap years)
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  // Update daysInMonth when selectedMonth changes
+  useEffect(() => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const daysCount = getDaysInMonth(year, month);
+    const daysArray = Array.from({ length: daysCount }, (_, i) => 
+      String(i + 1).padStart(2, "0")
+    );
+    setDaysInMonth(daysArray);
+  }, [selectedMonth]);
 
   const getMonthName = (monthStr) => {
     const [year, month] = monthStr.split("-");
-    const date = new Date(year, parseInt(month) - 1);
-    return date.toLocaleString("default", { month: "long" });
+    return new Date(year, month - 1).toLocaleString("default", { month: "long" });
   };
 
   const getAttendance = async () => {
-    const colRef = collection(db, "m_attendance");
-    const snapshot = await getDocs(colRef);
+    try {
+      setLoading(true);
+      const colRef = collection(db, "m_attendance");
+      const snapshot = await getDocs(colRef);
 
-    const [year, month] = selectedMonth.split("-");
-    const monthToMatch = `${month}/${year}`;
+      const [year, month] = selectedMonth.split("-");
+      const monthToMatch = `${month}/${year}`;
 
-    const result = snapshot.docs.map((docSnap) => {
-      const data = docSnap.data();
-      const userId = docSnap.id;
-      const name = data.name || userId;
+      const result = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        const userId = docSnap.id;
+        const name = data.name || userId;
 
-      const attendance = {};
-      for (const [date, value] of Object.entries(data)) {
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-          const [day, m, y] = date.split("/");
-          const dateMonth = `${m}/${y}`;
-          if (dateMonth === monthToMatch) {
-            attendance[day] = value.status === "Present" ? "P" : "";
+        const attendance = {};
+        for (const [date, value] of Object.entries(data)) {
+          if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+            const [day, m, y] = date.split("/");
+            if (`${m}/${y}` === monthToMatch) {
+              attendance[day] = value.status === "Present" ? "P" : "";
+            }
           }
         }
-      }
 
-      return { uid: userId, name, attendance };
-    });
+        return { uid: userId, name, attendance };
+      });
 
-    setAttendanceData(result);
+      setAttendanceData(result);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const downloadExcel = () => {
+    if (attendanceData.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
     const wsData = [
       ["S.No", "User Name", ...daysInMonth, "Total Present"],
       ...attendanceData.map((user, idx) => {
@@ -74,6 +97,15 @@ const ManagerMonthlyAttendance = () => {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Set column widths
+    ws['!cols'] = [
+      {wch: 5},  // S.No
+      {wch: 20}, // User Name
+      ...daysInMonth.map(() => ({wch: 3})), // Day columns
+      {wch: 12}  // Total Present
+    ];
+
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(wb, `Attendance_${selectedMonth}.xlsx`);
   };
@@ -84,57 +116,75 @@ const ManagerMonthlyAttendance = () => {
 
   return (
     <>
-    <ManagerNavbar/>
-    <div className="monthly-attendance-container">
-      <h2 className="title">
-        Monthly Attendance for {getMonthName(selectedMonth)}{" "}
-        {selectedMonth.split("-")[0]}
-      </h2>
+      <ManagerNavbar/>
+      <div className="monthly-attendance-container">
+        <h2 className="title">
+          Monthly Attendance for {getMonthName(selectedMonth)}{" "}
+          {selectedMonth.split("-")[0]}
+        </h2>
 
-      <div className="filters">
-        <input
-          type="month"
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-        />
-        <button className="download-btn" onClick={downloadExcel}>
-          Download Excel
-        </button>
-      </div>
+        <div className="filters">
+          <input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            max={new Date().toISOString().slice(0, 7)}
+          />
+          <button 
+            className="download-btn" 
+            onClick={downloadExcel}
+            disabled={attendanceData.length === 0}
+          >
+            Download Excel
+          </button>
+        </div>
 
-      <div className="table-responsive">
-        <table className="attendance-table">
-          <thead>
-            <tr>
-              <th>S.No</th>
-              <th>User Name</th>
-              {daysInMonth.map((d) => (
-                <th key={d}>{d}</th>
-              ))}
-              <th>Total Present</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attendanceData.map((user, idx) => {
-              const totalPresent = daysInMonth.filter(
-                (d) => user.attendance[d] === "P"
-              ).length;
-
-              return (
-                <tr key={user.uid}>
-                  <td>{idx + 1}</td>
-                  <td>{user.name}</td>
+        {loading ? (
+          <div className="loading">Loading attendance data...</div>
+        ) : attendanceData.length === 0 ? (
+          <div className="no-data">
+            No attendance records found for selected month
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="attendance-table">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>User Name</th>
                   {daysInMonth.map((d) => (
-                    <td key={d}>{user.attendance[d] || ""}</td>
+                    <th key={d}>{d}</th>
                   ))}
-                  <td>{totalPresent}</td>
+                  <th>Total Present</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {attendanceData.map((user, idx) => {
+                  const totalPresent = daysInMonth.filter(
+                    (d) => user.attendance[d] === "P"
+                  ).length;
+
+                  return (
+                    <tr key={user.uid}>
+                      <td>{idx + 1}</td>
+                      <td>{user.name}</td>
+                      {daysInMonth.map((d) => (
+                        <td 
+                          key={d} 
+                          className={user.attendance[d] === "P" ? "present" : ""}
+                        >
+                          {user.attendance[d] || ""}
+                        </td>
+                      ))}
+                      <td className="total-present">{totalPresent}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-    </div>
     </>
   );
 };

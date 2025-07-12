@@ -6,28 +6,33 @@ import "./MonthlyAttendance.css";
 import ManagerNavbar from "../../../Navbar/ManagerNavbar/Navbar";
 
 const ManagerEmployeeMonthlyAttendance = () => {
-  // Get current logged-in manager's UID from localStorage
   const currentManagerUid = localStorage.getItem('currentUserUid');
-
-  const getCurrentMonth = () => {
+  const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    return `${year}-${month}`;
-  };
-
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [attendanceData, setAttendanceData] = useState([]);
+  const [daysInMonth, setDaysInMonth] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const daysInMonth = Array.from({ length: 31 }, (_, i) =>
-    String(i + 1).padStart(2, "0")
-  );
+  // Calculate days in month dynamically
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  // Update daysInMonth when selectedMonth changes
+  useEffect(() => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const daysCount = getDaysInMonth(year, month);
+    const daysArray = Array.from({ length: daysCount }, (_, i) => 
+      String(i + 1).padStart(2, "0")
+    );
+    setDaysInMonth(daysArray);
+  }, [selectedMonth]);
 
   const getMonthName = (monthStr) => {
     const [year, month] = monthStr.split("-");
-    const date = new Date(year, parseInt(month) - 1);
-    return date.toLocaleString("default", { month: "long" });
+    return new Date(year, month - 1).toLocaleString("default", { month: "long" });
   };
 
   const getAttendance = async () => {
@@ -43,19 +48,16 @@ const ManagerEmployeeMonthlyAttendance = () => {
       
       snapshot.docs.forEach((docSnap) => {
         const data = docSnap.data();
-        const userId = docSnap.id;
-        
-        // Only process employees who report to this manager
         if (data.supervisorUid === currentManagerUid) {
+          const userId = docSnap.id;
           const name = data.name || userId;
           const attendance = {};
 
           for (const [date, value] of Object.entries(data)) {
             if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
               const [day, m, y] = date.split("/");
-              const dateMonth = `${m}/${y}`;
-              if (dateMonth === monthToMatch) {
-                attendance[day] = value.status === "Present" ? "P" : "";
+              if (`${m}/${y}` === monthToMatch) {
+                attendance[day] = value.status === "Present" ? "P" : "A"; // A for Absent
               }
             }
           }
@@ -66,40 +68,44 @@ const ManagerEmployeeMonthlyAttendance = () => {
 
       setAttendanceData(result);
     } catch (error) {
-      console.error("Error fetching attendance data:", error);
+      console.error("Error fetching attendance:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const downloadExcel = () => {
-    if (attendanceData.length === 0) {
+    if (!attendanceData.length) {
       alert("No data to export");
       return;
     }
 
     const wsData = [
-      ["S.No", "Employee Name", ...daysInMonth, "Total Present"],
+      ["S.No", "Employee Name", ...daysInMonth, "Total Present", "Total Absent"],
       ...attendanceData.map((user, idx) => {
-        const row = [
+        const presentDays = daysInMonth.filter(d => user.attendance[d] === "P");
+        const absentDays = daysInMonth.filter(d => user.attendance[d] === "A");
+        return [
           idx + 1,
           user.name,
-          ...daysInMonth.map((d) => user.attendance[d] || ""),
+          ...daysInMonth.map(d => user.attendance[d] || "-"),
+          presentDays.length,
+          absentDays.length
         ];
-        const totalPresent = daysInMonth.filter(
-          (d) => user.attendance[d] === "P"
-        ).length;
-        row.push(totalPresent);
-        return row;
-      }),
+      })
     ];
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     
     // Set column widths
-    const colWidths = [{wch: 5}, {wch: 20}, ...daysInMonth.map(() => ({wch: 3})), {wch: 12}];
-    ws['!cols'] = colWidths;
+    ws['!cols'] = [
+      {wch: 5},  // S.No
+      {wch: 20}, // Employee Name
+      ...daysInMonth.map(() => ({wch: 3})), // Day columns
+      {wch: 12}, // Total Present
+      {wch: 12}  // Total Absent
+    ];
 
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(wb, `Employee_Attendance_${selectedMonth}.xlsx`);
@@ -114,27 +120,31 @@ const ManagerEmployeeMonthlyAttendance = () => {
       <ManagerNavbar/>
       <div className="monthly-attendance-container">
         <h2 className="title">
-          Employee Monthly Attendance for {getMonthName(selectedMonth)}{" "}
-          {selectedMonth.split("-")[0]}
+          Employee Attendance for {getMonthName(selectedMonth)} {selectedMonth.split("-")[0]}
         </h2>
-        <p className="subtitle">Viewing attendance for employees under your supervision</p>
+        <p className="subtitle">Viewing employees under your supervision</p>
 
         <div className="filters">
           <input
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
+            max={new Date().toISOString().slice(0, 7)}
           />
-          <button className="download-btn" onClick={downloadExcel}>
+          <button 
+            className="download-btn" 
+            onClick={downloadExcel}
+            disabled={!attendanceData.length}
+          >
             Download Excel
           </button>
         </div>
 
         {loading ? (
-          <div className="loading">Loading employee attendance data...</div>
-        ) : attendanceData.length === 0 ? (
+          <div className="loading">Loading data...</div>
+        ) : !attendanceData.length ? (
           <div className="no-data">
-            No employees found under your supervision or no attendance records for selected month
+            No attendance records found for selected month
           </div>
         ) : (
           <div className="table-responsive">
@@ -142,29 +152,33 @@ const ManagerEmployeeMonthlyAttendance = () => {
               <thead>
                 <tr>
                   <th>S.No</th>
-                  <th>Employee Name</th>
-                  {daysInMonth.map((d) => (
-                    <th key={d}>{d}</th>
-                  ))}
-                  <th>Total Present</th>
+                  <th>Employee</th>
+                  {daysInMonth.map(d => <th key={d}>{d}</th>)}
+                  <th>Present</th>
+                  <th>Absent</th>
                 </tr>
               </thead>
               <tbody>
                 {attendanceData.map((user, idx) => {
-                  const totalPresent = daysInMonth.filter(
-                    (d) => user.attendance[d] === "P"
-                  ).length;
-
+                  const presentDays = daysInMonth.filter(d => user.attendance[d] === "P");
+                  const absentDays = daysInMonth.filter(d => user.attendance[d] === "A");
                   return (
                     <tr key={user.uid}>
                       <td>{idx + 1}</td>
                       <td>{user.name}</td>
-                      {daysInMonth.map((d) => (
-                        <td key={d} className={user.attendance[d] === "P" ? "present" : ""}>
+                      {daysInMonth.map(d => (
+                        <td 
+                          key={d} 
+                          className={
+                            user.attendance[d] === "P" ? "present" : 
+                            user.attendance[d] === "A" ? "absent" : ""
+                          }
+                        >
                           {user.attendance[d] || ""}
                         </td>
                       ))}
-                      <td className="total-present">{totalPresent}</td>
+                      <td className="total-present">{presentDays.length}</td>
+                      <td className="total-absent">{absentDays.length}</td>
                     </tr>
                   );
                 })}

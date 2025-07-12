@@ -74,3 +74,37 @@
     display: block;
   }
 }
+
+
+
+
+.logout-icon-desktop {
+  color: #be0404;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-left: 15px;
+  display: block;
+}
+
+.logout-icon-mobile {
+  display: none;
+  color: #be0404;
+  text-align: center;
+  padding: 1.5rem;
+  cursor: pointer;
+}
+
+.navbar-icons {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .logout-icon-desktop {
+    display: none;
+  }
+
+  .logout-icon-mobile {
+    display: block;
+  }
+}

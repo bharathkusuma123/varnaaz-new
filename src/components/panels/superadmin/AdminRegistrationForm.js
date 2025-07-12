@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import './AdminRegistrationForm.css';
+import SuperAdminNavbar from '../../Navbar/SuperAdminNavbar/Navbar';
 
 const AdminRegistrationForm = () => {
     const location = useLocation();
@@ -96,6 +97,9 @@ const AdminRegistrationForm = () => {
     };
 
     return (
+        <>
+              <SuperAdminNavbar/>
+
         <div className="dashboard-container">
             <div className="dashboard-card shadow-lg">
                 <div className="text-center mb-3">
@@ -194,6 +198,7 @@ const AdminRegistrationForm = () => {
                 </form>
             </div>
         </div>
+        </>
     );
 };
 

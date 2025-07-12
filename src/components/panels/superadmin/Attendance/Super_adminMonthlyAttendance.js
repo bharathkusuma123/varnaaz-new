@@ -18,10 +18,22 @@ const Super_adminMonthlyAttendance = () => {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [daysInMonth, setDaysInMonth] = useState([]);
 
-  const daysInMonth = Array.from({ length: 31 }, (_, i) =>
-    String(i + 1).padStart(2, "0")
-  );
+  // Function to get the number of days in a month
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  // Update daysInMonth when selectedMonth changes
+  useEffect(() => {
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const daysCount = getDaysInMonth(year, month);
+    const daysArray = Array.from({ length: daysCount }, (_, i) =>
+      String(i + 1).padStart(2, "0")
+    );
+    setDaysInMonth(daysArray);
+  }, [selectedMonth]);
 
   const getMonthName = (monthStr) => {
     const [year, month] = monthStr.split("-");
@@ -45,7 +57,6 @@ const Super_adminMonthlyAttendance = () => {
         const data = docSnap.data();
         const userId = docSnap.id;
 
-        // ✅ Match only admins under the current super admin
         if (data.supervisorUid === currentSuperAdminUid) {
           const name = data.name || userId;
           const attendance = {};
@@ -97,8 +108,13 @@ const Super_adminMonthlyAttendance = () => {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-    // Optional: Set column widths
-    const colWidths = [{ wch: 5 }, { wch: 20 }, ...daysInMonth.map(() => ({ wch: 3 })), { wch: 12 }];
+    // Set column widths
+    const colWidths = [
+      { wch: 5 },   // S.No
+      { wch: 20 },  // Admin Name
+      ...daysInMonth.map(() => ({ wch: 3 })),  // Day columns
+      { wch: 12 }   // Total Present
+    ];
     ws["!cols"] = colWidths;
 
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
