@@ -41,6 +41,12 @@ import ManagerEmployeeDailyAttendance from './components/panels/manager/Attendan
 import Super_AdminDailyattendance from './components/panels/superadmin/Attendance/Super_AdminDailyattendance';
 import Super_adminMonthlyAttendance from './components/panels/superadmin/Attendance/Super_adminMonthlyAttendance';
 import AdminLevaes from './components/panels/superadmin/Leaves/AdminLevaes';
+import ManagerTaskManager from './components/panels/manager/TaskManager/ManagerTaskManager';
+import TaskManager from './components/panels/employee/TaskManager/TaskManager';
+import Admintaskmanager from './components/panels/admin/AdminTaskmanager/Admintaskmanager';
+import MyTasksManager from './components/panels/manager/MyTasks/MyTasksManager';
+import Superadmintaskmanager from './components/panels/superadmin/Superadmintaskmanager/Superadmintaskmanager';
+import MyTasksAdmin from './components/panels/admin/MyTasksadmin/MyTasksadmin';
 
 function App() {
   const queryClient = new QueryClient();
@@ -97,7 +103,13 @@ function App() {
                      <Route path="/sa-a-attendance" element={<Super_AdminDailyattendance />} />
           <Route path="/sa-a-monthlyattendance" element={<Super_adminMonthlyAttendance/>} />
           <Route path="/sa-a-leave" element={<AdminLevaes />} />
-          
+
+          <Route path="/m-taskmanager" element={<ManagerTaskManager />} />
+          <Route path="/e-taskmanager" element={<TaskManager />} />
+           <Route path="/a-taskmanager" element={<Admintaskmanager />} />
+           <Route path="/m-mytaskmanager" element={<MyTasksManager />} />
+            <Route path="/sa-taskmanager" element={<Superadmintaskmanager />} />
+            <Route path="/a-mytaskmanager" element={<MyTasksAdmin />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

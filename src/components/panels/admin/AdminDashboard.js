@@ -1,103 +1,28 @@
-// import React, { useEffect } from 'react';
-// import { useLocation, useNavigate } from 'react-router-dom';
-// import { Button } from 'react-bootstrap';
-// import AdminNavbar from '../../Navbar/AdminNavbar/Navbar';
-
-// function AdminDashboard() {
-//   const location = useLocation();
-//   const navigate = useNavigate();
-  
-//   // Get the UID from location state or localStorage
-//   const [uid, setUid] = React.useState(null);
-
-//   useEffect(() => {
-//     // First try to get UID from location state
-//     if (location.state?.uid) {
-//       setUid(location.state.uid);
-//       localStorage.setItem('currentUserUid', location.state.uid);
-//     } else {
-//       // If not in location state, check localStorage
-//       const storedUid = localStorage.getItem('currentUserUid');
-//       if (storedUid) {
-//         setUid(storedUid);
-//       }
-//     }
-//   }, [location.state]);
-
-//   console.log("Admin Dashboard - Current UID:", uid); // Verify UID in console
-
-//   const handleManagerRegistration = () => {
-//     console.log("Navigating to admin registration with admin UID:", uid);
-//     navigate('/managerregistration', { state: { adminUid: uid } });
-//   };
-
-//   const handleViewDetails = () => {
-//     console.log("View details clicked with admin UID:", uid);
-//     navigate('/viewmanagers', { state: { adminUid: uid } });
-//   };
-
-//   return (
-//     <>
-//       <AdminNavbar/>
-//       <div className="container mt-5">
-//         <h1 className="text-center mb-4">Admin Dashboard</h1>
-//         <div className="d-flex justify-content-center gap-4">
-//           <Button 
-//             variant="primary" 
-//             size="lg"
-//             onClick={handleManagerRegistration}
-//           >
-//             Manager Registration
-//           </Button>
-          
-//           <Button 
-//             variant="info" 
-//             size="lg"
-//             onClick={handleViewDetails}
-//           >
-//             View Details
-//           </Button>
-//         </div>
-//       </div>
-//     </>
-//   );
-// }
-
-// export default AdminDashboard;
-
-
-
-
-
-
-
-
-
-
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
-import { Table, Button, Spinner, Container, Alert, Form, Row, Col, InputGroup } from 'react-bootstrap';
+import { Table, Button, Spinner, Container, Alert, Form, Row, Col, InputGroup, FormControl } from 'react-bootstrap';
 import { FaSearch } from 'react-icons/fa';
 import AdminNavbar from '../../Navbar/AdminNavbar/Navbar';
 
 function AdminDashboard() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [allUsers, setAllUsers] = useState([]);
+  
+  // State for UID and user data
+  const [uid, setUid] = React.useState(null);
+  const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [displayedUsers, setDisplayedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState('manager');
+  const [selectedRole, setSelectedRole] = useState('all');
   const [selectedManager, setSelectedManager] = useState('all');
   const [managers, setManagers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [usersPerPage] = useState(5);
-  const [uid, setUid] = useState(null);
 
   useEffect(() => {
     // First try to get UID from location state
@@ -115,52 +40,77 @@ function AdminDashboard() {
 
   useEffect(() => {
     if (uid) {
-      fetchUsers();
+      fetchAllUsers();
     }
   }, [uid]);
 
-  const fetchUsers = async () => {
+  const fetchAllUsers = async () => {
     try {
       if (!uid) {
         throw new Error('Admin UID not found. Please login again.');
       }
 
-      console.log('Fetching users for admin:', uid);
-      
-      // Query all users under this admin (managers and their employees)
-      const usersQuery = query(
+      const usersList = [];
+      const managersList = [];
+
+      // Step 1: Fetch Managers under this admin
+      const managerQuery = query(
         collection(db, 'users'),
         where('admin_uid', '==', uid)
       );
+      const managerSnapshot = await getDocs(managerQuery);
 
-      const querySnapshot = await getDocs(usersQuery);
-      const usersData = [];
-      const managersList = [];
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const userObj = {
-          id: doc.id,
-          fullName: data.fullName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          role: data.role || '',
-          managerId: data.manager_uid || '',
-          createdAt: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'
-        };
-
-        usersData.push(userObj);
-        
-        if (data.role === 'manager') {
-          managersList.push({
-            id: doc.id,
-            fullName: data.fullName || ''
+      for (const managerDoc of managerSnapshot.docs) {
+        const managerData = managerDoc.data();
+        if (managerData.role === 'manager') {
+          const managerId = managerDoc.id;
+          const managerObj = {
+            id: managerId,
+            fullName: managerData.fullName || '',
+          };
+          
+          usersList.push({
+            id: managerId,
+            fullName: managerData.fullName || '',
+            email: managerData.email || '',
+            phone: managerData.phone || '',
+            role: managerData.role || '',
+            createdAt: managerData.createdAt
+              ? new Date(managerData.createdAt.seconds * 1000).toLocaleDateString()
+              : 'N/A',
           });
-        }
-      });
+          
+          managersList.push(managerObj);
 
-      console.log('Fetched users:', usersData);
-      setAllUsers(usersData);
+          // Step 2: Fetch Employees under this manager
+          const employeeQuery = query(
+            collection(db, 'users'),
+            where('manager_uid', '==', managerId)
+          );
+          const employeeSnapshot = await getDocs(employeeQuery);
+
+          for (const empDoc of employeeSnapshot.docs) {
+            const empData = empDoc.data();
+            if (empData.role === 'employee') {
+              usersList.push({
+                id: empDoc.id,
+                fullName: empData.fullName || '',
+                email: empData.email || '',
+                phone: empData.phone || '',
+                role: empData.role || '',
+                createdAt: empData.createdAt
+                  ? new Date(empData.createdAt.seconds * 1000).toLocaleDateString()
+                  : 'N/A',
+                managerId: managerId
+              });
+            }
+          }
+        }
+      }
+
+      setUsers(usersList);
+      setFilteredUsers(usersList);
+      setDisplayedUsers(usersList);
       setManagers(managersList);
       setLoading(false);
     } catch (err) {
@@ -172,7 +122,7 @@ function AdminDashboard() {
 
   // Filter users based on selected role and manager
   useEffect(() => {
-    let filtered = allUsers;
+    let filtered = users;
     
     if (selectedRole !== 'all') {
       filtered = filtered.filter(user => user.role === selectedRole);
@@ -185,7 +135,7 @@ function AdminDashboard() {
     
     setFilteredUsers(filtered);
     setCurrentPage(1); // Reset to first page when filters change
-  }, [selectedRole, selectedManager, allUsers]);
+  }, [selectedRole, selectedManager, users]);
 
   // Apply search filter
   useEffect(() => {
@@ -228,9 +178,7 @@ function AdminDashboard() {
       <>
         <AdminNavbar/>
         <Container className="text-center mt-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
+          <Spinner animation="border" />
           <p>Loading users...</p>
         </Container>
       </>
@@ -252,7 +200,7 @@ function AdminDashboard() {
     <>
       <AdminNavbar/>
       <Container className="mt-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-1">
           <h2>Users Under Your Administration</h2>
           <Button 
             variant="primary" 
@@ -271,8 +219,9 @@ function AdminDashboard() {
                 value={selectedRole}
                 onChange={handleRoleChange}
               >
-                <option value="manager">Managers</option>
-                <option value="employee">Employees</option>
+                <option value="all">All Roles</option>
+                <option value="manager">Manager</option>
+                <option value="employee">Employee</option>
               </Form.Control>
             </Form.Group>
           </Col>
@@ -301,7 +250,7 @@ function AdminDashboard() {
             <Form.Group controlId="searchFilter">
               <Form.Label>Search:</Form.Label>
               <InputGroup>
-                <Form.Control
+                <FormControl
                   placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -315,17 +264,13 @@ function AdminDashboard() {
         </Row>
 
         {displayedUsers.length === 0 ? (
-          <Alert variant="info">
-            {searchTerm.trim() === '' 
-              ? `No ${selectedRole}s found under your administration.` 
-              : 'No users match your search criteria.'}
-          </Alert>
+          <Alert variant="info">No users found with the selected filters.</Alert>
         ) : (
           <>
             <Table striped bordered hover responsive className="mt-4">
               <thead className="thead-dark">
                 <tr>
-                  <th>#</th>
+                  <th>S.No</th>
                   <th>Full Name</th>
                   <th>Email</th>
                   <th>Phone</th>

@@ -1,10 +1,77 @@
+// import React, { useEffect } from 'react';
+// import { useLocation, useNavigate } from 'react-router-dom';
+// import { Button } from 'react-bootstrap';
+// import Navbar from '../../Navbar/SuperAdminNavbar/Navbar';
+// import SuperAdminNavbar from '../../Navbar/SuperAdminNavbar/Navbar';
+
+// function SuperadminDashboard() {
+//   const location = useLocation();
+//   const navigate = useNavigate();
+  
+//   // State to store the UID
+//   const [uid, setUid] = React.useState(null);
+
+//   useEffect(() => {
+//     // First try to get UID from location state
+//     if (location.state?.uid) {
+//       setUid(location.state.uid);
+//       localStorage.setItem('currentUserUid', location.state.uid);
+//     } else {
+//       // If not in location state, check localStorage
+//       const storedUid = localStorage.getItem('currentUserUid');
+//       if (storedUid) {
+//         setUid(storedUid);
+//       }
+//     }
+//   }, [location.state]);
+
+//   console.log("Superadmin Dashboard - Current UID:", uid); // Verify UID in console
+
+//   const handleAdminRegistration = () => {
+//     console.log("Navigating to admin registration with superadmin UID:", uid);
+//     navigate('/adminregistrationform', { state: { superadminUid: uid } });
+//   };
+
+//   const handleViewDetails = () => {
+//     console.log("View details clicked with superadmin UID:", uid);
+//     navigate('/viewadmindetails', { state: { superadminUid: uid } });
+//   };
+
+//   return (
+//     <>
+//       <SuperAdminNavbar/>
+//       <div className="container mt-5">
+//         <h1 className="text-center mb-4">Superadmin Dashboard</h1>
+//         <div className="d-flex justify-content-center gap-4">
+//           <Button 
+//             variant="primary" 
+//             size="lg"
+//             onClick={handleAdminRegistration}
+//           >
+//             Admin Registration
+//           </Button>
+          
+//           <Button 
+//             variant="info" 
+//             size="lg"
+//             onClick={handleViewDetails}
+//           >
+//             View Details
+//           </Button>
+//         </div>
+//       </div>
+//     </>
+//   );
+// }
+
+// export default SuperadminDashboard;
+
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../firebase/firebase';
-import { Table, Button, Spinner, Container, Alert, Form, Row, Col, InputGroup, FormControl } from 'react-bootstrap';
+import { Table, Button, Spinner, Container, Alert, Form, Row, Col } from 'react-bootstrap';
 import SuperAdminNavbar from '../../Navbar/SuperAdminNavbar/Navbar';
-import { FaSearch } from 'react-icons/fa';
 
 function SuperadminDashboard() {
   const location = useLocation();
@@ -14,16 +81,12 @@ function SuperadminDashboard() {
   const [uid, setUid] = React.useState(null);
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [displayedUsers, setDisplayedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRole, setSelectedRole] = useState('all');
   const [selectedManager, setSelectedManager] = useState('all');
   const [managers, setManagers] = useState([]);
   const [admins, setAdmins] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(5);
 
   useEffect(() => {
     // First try to get UID from location state
@@ -149,7 +212,6 @@ function SuperadminDashboard() {
 
       setUsers(usersList);
       setFilteredUsers(usersList);
-      setDisplayedUsers(usersList);
       setManagers(managersList);
       setAdmins(adminsList);
       setLoading(false);
@@ -179,31 +241,7 @@ function SuperadminDashboard() {
     }
     
     setFilteredUsers(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
   }, [selectedRole, selectedManager, users]);
-
-  // Apply search filter
-  useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setDisplayedUsers(filteredUsers);
-    } else {
-      const searchResults = filteredUsers.filter(user => 
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setDisplayedUsers(searchResults);
-    }
-    setCurrentPage(1); // Reset to first page when search term changes
-  }, [searchTerm, filteredUsers]);
-
-  // Pagination logic
-  const indexOfLastUser = currentPage * usersPerPage;
-  const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = displayedUsers.slice(indexOfFirstUser, indexOfLastUser);
-  const totalPages = Math.ceil(displayedUsers.length / usersPerPage);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const handleAdminRegistration = () => {
     navigate('/adminregistrationform', { state: { superadminUid: uid } });
@@ -256,8 +294,10 @@ function SuperadminDashboard() {
           </Button>
         </div>
 
-        <Row className="mb-3 align-items-end">
-          <Col md={3}>
+        {/* <h2 className="mb-4">All Users under your Hierarchy</h2> */}
+
+        <Row className="mb-1">
+          <Col md={4}>
             <Form.Group controlId="roleFilter">
               <Form.Label>Select Role:</Form.Label>
               <Form.Control
@@ -274,7 +314,7 @@ function SuperadminDashboard() {
           </Col>
 
           {selectedRole === 'employee' && (
-            <Col md={3}>
+            <Col md={4}>
               <Form.Group controlId="managerFilter">
                 <Form.Label>Select Manager:</Form.Label>
                 <Form.Control
@@ -294,7 +334,7 @@ function SuperadminDashboard() {
           )}
 
           {selectedRole === 'manager' && (
-            <Col md={3}>
+            <Col md={4}>
               <Form.Group controlId="adminFilter">
                 <Form.Label>Select Admin:</Form.Label>
                 <Form.Control
@@ -312,25 +352,9 @@ function SuperadminDashboard() {
               </Form.Group>
             </Col>
           )}
-
-          <Col md={3}>
-            <Form.Group controlId="searchFilter">
-              <Form.Label>Search:</Form.Label>
-              <InputGroup>
-                <FormControl
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <InputGroup.Text>
-                  <FaSearch />
-                </InputGroup.Text>
-              </InputGroup>
-            </Form.Group>
-          </Col>
         </Row>
 
-        {displayedUsers.length === 0 ? (
+        {filteredUsers.length === 0 ? (
           <Alert variant="info">No users found with the selected filters.</Alert>
         ) : (
           <>
@@ -348,9 +372,9 @@ function SuperadminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {currentUsers.map((user, index) => (
+                {filteredUsers.map((user, index) => (
                   <tr key={user.id}>
-                    <td>{indexOfFirstUser + index + 1}</td>
+                    <td>{index + 1}</td>
                     <td>{user.fullName}</td>
                     <td>{user.email}</td>
                     <td>{user.phone}</td>
@@ -366,34 +390,8 @@ function SuperadminDashboard() {
                 ))}
               </tbody>
             </Table>
-
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <div>
-                <p>Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, displayedUsers.length)} of {displayedUsers.length} users</p>
-              </div>
-              <div>
-                <nav>
-                  <ul className="pagination">
-                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                      <button className="page-link" onClick={() => paginate(currentPage - 1)}>
-                        Previous
-                      </button>
-                    </li>
-                    {Array.from({ length: totalPages }, (_, i) => (
-                      <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
-                        <button className="page-link" onClick={() => paginate(i + 1)}>
-                          {i + 1}
-                        </button>
-                      </li>
-                    ))}
-                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                      <button className="page-link" onClick={() => paginate(currentPage + 1)}>
-                        Next
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
+            <div className="mt-3">
+              <p>Total Users: {filteredUsers.length}</p>
             </div>
           </>
         )}

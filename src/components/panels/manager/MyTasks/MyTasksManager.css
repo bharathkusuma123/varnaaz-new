@@ -1,0 +1,137 @@
+.tasks-container {
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+}
+
+.tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.welcome-message {
+    font-weight: normal;
+    color: #555;
+}
+
+.tasks-table-container {
+    overflow-x: auto;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.tasks-table th,
+.tasks-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.tasks-table th {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.description-column {
+    width: 30%;
+    min-width: 200px;
+}
+
+.status-column {
+    width: 150px;
+}
+
+.status-pending {
+    color: #ff9800;
+    font-weight: bold;
+}
+
+.status-approved {
+    color: #4caf50;
+    font-weight: bold;
+}
+
+.status-in-progress {
+    color: #2196f3;
+    font-weight: bold;
+}
+
+.no-tasks {
+    text-align: center;
+    font-style: italic;
+    margin-top: 30px;
+}
+
+.form-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-select:disabled {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.form-select.status-pending {
+    border-color: #ff9800;
+    background-color: #fff3e0;
+    color: #ff9800;
+}
+
+.form-select.status-approved {
+    border-color: #4caf50;
+    background-color: #e8f5e9;
+    color: #4caf50;
+}
+
+.form-select.status-in-progress {
+    border-color: #2196f3;
+    background-color: #e3f2fd;
+    color: #2196f3;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tasks-table th,
+    .tasks-table td {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    .description-column {
+        width: 25%;
+        min-width: 150px;
+    }
+
+    .status-column {
+        width: 120px;
+    }
+
+    .form-select {
+        padding: 6px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 600px) {
+    .tasks-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .welcome-message {
+        margin-top: 5px;
+    }
+}
